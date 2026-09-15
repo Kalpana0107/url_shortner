@@ -11,6 +11,7 @@ app.post("/api/shorten", (req, res) => {
   console.log(req.body);
   res.json({ received: req.body.url });
 });
+
 app.listen(5000,()=>{
     console.log("Congrats Server is running on port 5000");
 });
