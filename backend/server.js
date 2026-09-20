@@ -1,4 +1,6 @@
+require('dotenv').config();
 const express= require("express");
+const pool = require('./db');
 const app = express();
 app.use(express.json());
 app.get("/",(req,res)=>{
@@ -20,8 +22,13 @@ function generateShortCode() {
   return ans;
 }
 
+//testing the Node
+/* pool.query('SELECT NOW()', (err, res) => {
+  console.log(err, res?.rows);
+}); */
+
 app.listen(5000,()=>{
     console.log("Congrats Server is running on port 5000");
-    console.log(generateShortCode())
-    console.log(generateShortCode())
+  
 });
+
