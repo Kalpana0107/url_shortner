@@ -1,6 +1,6 @@
 # URL Shortener
 
-A backend learning project: paste a long URL, get back a short one that redirects to it. Built one concept at a time — no full-tutorial copy-paste — following a self-paced 24-day roadmap.
+A backend learning project: paste a long URL, get back a short one that redirects to it. Built one concept at a time.
 
 ## Tech Stack
 
@@ -78,7 +78,3 @@ Accepts a JSON body and returns a generated short code.
    ```
    Server runs on `http://localhost:5000`.
 
-## Notes for future me
-
-- Values are always inserted using parameterized queries (`$1`, `$2`) — never string concatenation — to avoid SQL injection.
-- `short_url` is `UNIQUE NOT NULL` — every row must have a code, and no two rows can share one.
