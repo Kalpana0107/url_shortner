@@ -38,11 +38,15 @@ app.post("/api/shorten", async (req, res) => {
     return res.status(400).json({ error: "URL is required" });
   }
 
-  try {
-    new URL(url);
-  } catch {
-    return res.status(400).json({ error: "Invalid URL format (include http:// or https://)" });
-  }
+  let parsed;
+try {
+  parsed = new URL(url);
+} catch {
+  return res.status(400).json({ error: "Invalid URL format (include http:// or https://)" });
+}
+if (!["http:", "https:"].includes(parsed.protocol)) {
+  return res.status(400).json({ error: "Only http and https URLs are allowed" });
+}
 
   try {
     let insertedRow = null;
