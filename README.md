@@ -1,34 +1,37 @@
-# URL Shortener
+# URL Shortener (SnapLink)
 
-A backend learning project: paste a long URL, get back a short one that redirects to it. Built one concept at a time.
+A full-stack URL shortener: paste a long URL, get a short link that redirects to it, and track how many times each link is clicked. Built as a learning project, one concept at a time.
+
+## Features
+
+- Shorten any http/https URL into a 6-character code
+- Redirect from `/:shortCode` to the original URL
+- Click counter that increments on every redirect
+- Duplicate short codes are detected and regenerated automatically
+- React dashboard: create links, copy them, see total links and total clicks
 
 ## Tech Stack
 
-| Layer    | Technology       |
-|----------|------------------|
-| Backend  | Node.js + Express |
+| Layer    | Technology |
+|----------|------------|
+| Frontend | React + Vite, Tailwind CSS, lucide-react |
+| Backend  | Node.js + Express 5 |
 | Database | PostgreSQL (via `pg`) |
-| Config   | dotenv |
-| Frontend | React + Vite (not started yet) |
+| Config   | dotenv, cors |
 
-## Status
+## Project Structure
 
-Actively in progress. Backend can accept a URL, generate a short code, and store it in PostgreSQL. Frontend, redirect route, and validation are not built yet.
-
-## Progress Log
-
-- [x] **Express server** — basic server running on port 5000, `GET /` responds
-- [x] **JSON handling** — `express.json()` middleware wired in; `POST /api/shorten` reads `req.body.url`
-- [x] **Short code generator** — `generateShortCode()` produces a random 6-character alphanumeric code
-- [x] **PostgreSQL setup** — local Postgres installed, `url_shortener` database created, `urls` table created via hand-written `CREATE TABLE`
-- [x] **SQL CRUD practiced manually** — INSERT / SELECT / UPDATE / DELETE run directly in pgAdmin's Query Tool
-- [x] **Node ↔ PostgreSQL connection** — `pg` Pool configured via `.env` (`dotenv`), connection verified with `SELECT NOW()`
-- [x] **`.env` excluded from git** — credentials never committed
-- [ ] **`POST /api/shorten` stores to database** — route rewritten to insert via parameterized query (`$1`, `$2`) and return the short code; connecting piece just finished, being tested now
-- [ ] **Redirect route** — `GET /:shortCode` looking up the original URL and redirecting
-- [ ] **Input validation & error handling**
-- [ ] **React frontend**
-- [ ] **Click analytics, expiration, custom aliases, auth, security, caching, deployment** — later stages of the roadmap, not started
+```
+url_shortner/
+├── backend/
+│   ├── server.js      # Express app and all routes
+│   ├── db.js          # PostgreSQL connection pool
+│   └── package.json
+├── frontend/
+│   ├── src/App.jsx    # Landing page + dashboard
+│   └── package.json
+└── README.md
+```
 
 ## Database Schema
 
@@ -37,44 +40,100 @@ CREATE TABLE urls (
   id SERIAL PRIMARY KEY,
   original_url TEXT NOT NULL,
   short_url VARCHAR(6) UNIQUE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  clicks INTEGER NOT NULL DEFAULT 0
 );
 ```
 
-## API (so far)
+## API
 
 ### `POST /api/shorten`
-Accepts a JSON body and returns a generated short code.
+Creates a short link.
 
-**Request**
+Request:
 ```json
 { "url": "https://example.com" }
 ```
 
-**Response**
+Response `201 Created`:
 ```json
-{ "shortUrl": "abc123" }
+{
+  "id": 1,
+  "original_url": "https://example.com",
+  "short_url": "bzu0Ai",
+  "created_at": "2026-11-14T10:00:00.000Z",
+  "clicks": 0
+}
 ```
+
+Errors: `400` if the URL is missing or invalid, `500` on server error.
+
+### `GET /api/urls`
+Returns all links, newest first (used by the dashboard).
+
+### `GET /:shortCode`
+Increments the click count and redirects to the original URL.
+Returns `404` if the code does not exist.
 
 ## Setup
 
-1. Clone the repo and install dependencies:
-   ```bash
-   cd backend
-   npm install
-   ```
-2. Create a `.env` file in `backend/` (not committed — see `.gitignore`):
-   ```
-   user=postgres
-   host=localhost
-   port=5432
-   password=your_postgres_password
-   database=url_shortener
-   ```
-3. Make sure PostgreSQL is running and the `urls` table exists (see schema above).
-4. Start the server:
-   ```bash
-   node server.js
-   ```
-   Server runs on `http://localhost:5000`.
+### Prerequisites
+- Node.js
+- PostgreSQL (with a database named `url_shortener` and the `urls` table above)
 
+### Backend
+```bash
+cd backend
+npm install
+```
+
+Create `backend/.env` (never commit this file):
+```
+user=postgres
+host=localhost
+port=5432
+password=your_postgres_password
+database=url_shortener
+SERVER_PORT=5000
+```
+
+Start the server:
+```bash
+node server.js
+```
+Runs on `http://localhost:5000`.
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open the URL Vite prints (usually `http://localhost:5173`). The backend must be running.
+
+## Concepts Practiced
+
+- Express routing, middleware order, and `express.json()`
+- Path parameters (`req.params`) and `res.redirect`
+- Parameterized SQL queries (`$1`, `$2`) to prevent SQL injection
+- `INSERT ... RETURNING` and handling unique-constraint errors (Postgres code `23505`)
+- `async`/`await` with `try/catch` in every route
+- CORS between a Vite frontend and an Express backend
+- React state, `useEffect`, and `fetch` against a REST API
+
+## Roadmap
+
+- [x] Express server, JSON handling, short code generator
+- [x] PostgreSQL setup and Node connection
+- [x] Store URLs with parameterized queries
+- [x] Redirect route and click counter
+- [x] URL validation and duplicate-code retry
+- [x] React dashboard
+- [x] Restrict accepted protocols to http/https
+- [x] Cap the duplicate-code retry loop
+- [x] Move the API base URL in the frontend to an environment variable
+- [x] Link expiration and custom aliases
+- [x] Authentication and rate limiting
+- [x] Redis caching
+- [x] Deployment
+- [x] Tests
